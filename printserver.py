@@ -33,7 +33,7 @@ class DBThread(QThread):
         QThread.__init__(self)
 
     def run(self):
-        def format(data, copies):
+        def format(data):
             document = {
                 "lines": [
                     [0.2,0.125,0.2,0.875],
@@ -49,16 +49,16 @@ class DBThread(QThread):
                         "text": data["department"]
                     },
                     {
-                        "x": 0.5,
+                        "x": 0.525,
                         "y": 0.875,
-                        "width": 0.5,
+                        "width": 0.45,
                         "height": 0.125,
                         "text": data["date"]
                     },
                     {
-                        "x": 0,
+                        "x": 0.025,
                         "y": 0.875,
-                        "width": 0.5,
+                        "width": 0.45,
                         "height": 0.125,
                         "text": data["bin"]
                     }
@@ -90,7 +90,7 @@ class DBThread(QThread):
                 text = document["text"][idx]
                 defaults.update(document["text"][idx])
                 document["text"][idx] = defaults
-            self.signal.emit((document, copies))
+            self.signal.emit((document, data['copies']))
         client = CouchDB("printer", "FEEDMEPAPER", url="http://localhost:5984", connect=True)
         session = client.session()
         if not 'magfest' in client.all_dbs():
@@ -109,7 +109,7 @@ class DBThread(QThread):
                 if 'print_status' in document.keys():
                     if document['print_status'] == "pending":
                         print("Printing {}".format(document['label']['bin']))
-                        format(document['label'], document['copies'])
+                        format(document)
                         document['print_status'] = "printed"
                         document.save()
             since = changes.last_seq

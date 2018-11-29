@@ -1,5 +1,12 @@
 <html>
     <head>
+        <meta charset="utf-8">
+        <meta content="width=device-width,initial-scale=1,minimal-ui" name="viewport">
+        <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic|Material+Icons">
+        <link rel="stylesheet" href="//unpkg.com/vue-material@beta/dist/vue-material.min.css">
+        <link rel="stylesheet" href="//unpkg.com/vue-material@beta/dist/theme/default.css">
+        <link rel="stylesheet" href="inventory.css"></link>
+        <title>MAGFest Inventory</title>
         <script>
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
@@ -8,12 +15,35 @@
             }
         </script>
         <script src="//cdn.jsdelivr.net/npm/pouchdb@7.0.0/dist/pouchdb.min.js"></script>
+        <script src="//cdn.jsdelivr.net/npm/pouchdb@7.0.0/dist/pouchdb.find.min.js"></script>
         <script src="//cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+        <script src="//unpkg.com/vue-material@beta"></script>
         <script src="inventory.js"></script>
     </head>
     <body>
         <div id="app">
-            {{ message }}
+            <md-app>
+                <md-app-toolbar class="md-primary">
+                    <span class="md-title">MAGFest Inventory</span>
+                </md-app-toolbar>
+                <md-app-content>
+                    <div v-for="department in departments" :key="department">
+                        <md-table md-card v-model="bins[department]">
+                            <md-table-toolbar>
+                                <h1 class="md-title">{{ department }}</h1>
+                            </md-table-toolbar>
+
+                            <md-table-row slot="md-table-row" slot-scope="{ item }">
+                                <md-table-cell md-label="ID" md-sort-by="_id">{{ item['_id'] }}</md-table-cell>
+                                <md-table-cell md-label="Date" md-sort-by="date">{{ item['date'] }}</md-table-cell>
+                                <md-table-cell md-label="Labels" md-sort-by="copies" md-numeric>{{ item['copies'] }}</md-table-cell>
+                                <md-table-cell md-label="Print Status" md-sort-by="print_status">{{ item['print_status'] }}</md-table-cell>
+                                <md-table-cell md-label="Items" md-numeric>{{ item['items'].length }}</md-table-cell>
+                            </md-table-row>
+                        </md-table>
+                    </div>
+                </md-app-content>
+            </md-app>
         </div>
     </body>
 </html>
