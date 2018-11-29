@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js');
+                });
+            }
+        </script>
+        <script src="//cdn.jsdelivr.net/npm/pouchdb@7.0.0/dist/pouchdb.min.js"></script>
+        <script src="//cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+        <script src="inventory.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            {{ message }}
+        </div>
+    </body>
+</html>
