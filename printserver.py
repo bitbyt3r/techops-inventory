@@ -2,11 +2,17 @@ import sys
 import os
 import io
 import time
-import win32print
-import win32ui
-import win32con
 import threading
-from PIL import Image, ImageWin, ImageQt
+
+from sys import platform
+if platform == "win32":
+    import win32print
+    import win32ui
+    import win32con
+    import threading
+    from PIL import ImageWin
+    
+from PIL import Image
 from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
 from PyQt5.QtGui import QColor, QPainter, QFont, QBitmap, QImage, QPen
 from PyQt5.QtCore import QThread, pyqtSignal, QSizeF, Qt, QBuffer
@@ -108,7 +114,7 @@ class DBThread(QThread):
                 document.fetch()
                 if 'print_status' in document.keys():
                     if document['print_status'] == "pending":
-                        print("Printing {}".format(document['label']['bin']))
+                        print("Printing {}".format(document['bin']))
                         format(document)
                         document['print_status'] = "printed"
                         document.save()
@@ -131,9 +137,11 @@ class Window(QtWidgets.QWidget):
 
         self.dbThread.start()
 
-    def paintEvent(self, event):
+    def paintEvent(self, event, target=None):
+        if not target:
+            target = self
         black, white = QColor(0,0,0), QColor(255,255,255)
-        paint = QPainter(self)
+        paint = QPainter(target)
         paint.setRenderHint(QPainter.Antialiasing, False)
         paint.setRenderHint(QPainter.TextAntialiasing, False)
         paint.setRenderHint(QPainter.HighQualityAntialiasing, False)
@@ -177,23 +185,35 @@ class Window(QtWidgets.QWidget):
         with renderLock:
             self.document, copies = data
             self.update()
-            printerName = win32print.GetDefaultPrinter()
-            deviceContext = win32ui.CreateDC()
-            deviceContext.CreatePrinterDC(printerName)
-            pix = self.grab()
-            bmp = QImage(pix)
-            buffer = QBuffer()
-            buffer.open(QBuffer.ReadWrite)
-            bmp.save(buffer, "BMP")
-            img = Image.open(io.BytesIO(buffer.data()))
-            deviceContext.StartDoc("Inventory Label")
-            for i in range(copies):
-                deviceContext.StartPage()
-                dib = ImageWin.Dib(img)
-                dib.draw(deviceContext.GetHandleOutput(), (0,0,self.size[0],self.size[1]))
-                deviceContext.EndPage()
-            deviceContext.EndDoc()
-            deviceContext.DeleteDC()
+
+            if platform == "linux":
+                bmp = QImage(self.size[0], self.size[1], QImage.Format_Mono)
+                self.paintEvent(None, bmp)
+                buffer = QBuffer()
+                buffer.open(QBuffer.ReadWrite)
+                bmp.save(buffer, "BMP")
+                img = Image.open(io.BytesIO(buffer.data()))
+                img.save("/tmp/image.png")
+                for i in range(copies):
+                    os.system("lpr /tmp/image.png")
+            elif platform == "win32":
+                pix = self.grab()
+                bmp = QImage(pix)
+                buffer = QBuffer()
+                buffer.open(QBuffer.ReadWrite)
+                bmp.save(buffer, "BMP")
+                img = Image.open(io.BytesIO(buffer.data()))
+                printerName = win32print.GetDefaultPrinter()
+                deviceContext = win32ui.CreateDC()
+                deviceContext.CreatePrinterDC(printerName)
+                deviceContext.StartDoc("Inventory Label")
+                for i in range(copies):
+                    deviceContext.StartPage()
+                    dib = ImageWin.Dib(img)
+                    dib.draw(deviceContext.GetHandleOutput(), (0,0,self.size[0],self.size[1]))
+                    deviceContext.EndPage()
+                deviceContext.EndDoc()
+                deviceContext.DeleteDC()
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
