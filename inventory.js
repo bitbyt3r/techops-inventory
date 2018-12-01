@@ -17,6 +17,8 @@ window.onload = function() {
             bins: {},
             departments: [],
             pallets: [],
+            showAddDialog: false,
+            editBin: {},
         },
         mounted() {
             db.changes({
@@ -52,14 +54,29 @@ window.onload = function() {
             })
         },
         methods: {
-            add_bin(department) {
-
+            add_bin() {
+                this.editBin = {};
+                this.showAddDialog = true;
             },
             edit_bin(bin) {
-
+                this.editBin = bin;
+                this.showAddDialog = true;
+            },
+            save_bin(bin) {
+                this.showAddDialog = false;
+            },
+            cancel_bin(bin) {
+                this.showAddDialog = false;
+                this.editBin = {};  
             },
             delete_bin(bin) {
 
+            },
+            add_item() {
+                this.editBin.items.push([0, "New Item"]);
+            },
+            delete_item(item) {
+                this.editBin.items.splice(this.editBin.items.indexOf(item), 1);
             }
         }
     });
